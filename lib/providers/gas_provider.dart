@@ -8,6 +8,7 @@ class GasProvider with ChangeNotifier {
   final AudioPlayer _audioPlayer = AudioPlayer();
   Timer? _timer;
   bool _isAlarmPlaying = false;
+  GasStatus? _currentAlarmStatus;
   int _cycleCounter = 0;
 
   // 5 Sensor untuk 5 jenis gas
@@ -119,20 +120,44 @@ class GasProvider with ChangeNotifier {
   }
 
   void _checkAlarm() async {
-    // WORST CASE: Jika salah satu sensor BAHAYA, maka alarm berbunyi
+    // WORST CASE: Cek status dari semua sensor
     bool hasDanger = sensors.any((s) => s.status == GasStatus.danger);
+    bool hasWarning = sensors.any((s) => s.status == GasStatus.warning);
 
-    if (hasDanger && !_isAlarmPlaying) {
-      _isAlarmPlaying = true;
-      await _audioPlayer.setReleaseMode(ReleaseMode.loop);
-      try {
-        await _audioPlayer.play(AssetSource('alarm.mp3'));
-      } catch (e) {
-        debugPrint('Error playing alarm: $e');
-      }
-    } else if (!hasDanger && _isAlarmPlaying) {
-      _isAlarmPlaying = false;
+    GasStatus targetStatus = hasDanger
+        ? GasStatus.danger
+        : hasWarning
+            ? GasStatus.warning
+            : GasStatus.normal;
+
+    // Jika status berubah atau audio belum dimulai, update audio
+    if (_currentAlarmStatus != targetStatus) {
+      _currentAlarmStatus = targetStatus;
+
       await _audioPlayer.stop();
+
+      if (targetStatus == GasStatus.danger) {
+        // Status BAHAYA: putar bahaya.mp3
+        _isAlarmPlaying = true;
+        await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+        try {
+          await _audioPlayer.play(AssetSource('bahaya.mp3'));
+        } catch (e) {
+          debugPrint('Error playing bahaya alarm: $e');
+        }
+      } else if (targetStatus == GasStatus.warning) {
+        // Status WASPADA: putar waspada.mp3
+        _isAlarmPlaying = true;
+        await _audioPlayer.setReleaseMode(ReleaseMode.loop);
+        try {
+          await _audioPlayer.play(AssetSource('waspada.mp3'));
+        } catch (e) {
+          debugPrint('Error playing waspada alarm: $e');
+        }
+      } else {
+        // Status NORMAL: stop audio
+        _isAlarmPlaying = false;
+      }
     }
   }
 
