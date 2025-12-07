@@ -1,10 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/gas_provider.dart';
 import '../models/gas_data.dart';
 
 class SensorListPage extends StatelessWidget {
   const SensorListPage({super.key});
+
+  // Fungsi untuk membuka Google Maps
+  Future<void> _openGoogleMaps(BuildContext context) async {
+    final url = Uri.parse('https://maps.app.goo.gl/nF5JmxUwTZHU2Bkj9?g_st=ipc');
+
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(
+          url,
+          mode: LaunchMode.externalApplication,
+        );
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Tidak dapat membuka Google Maps'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +53,7 @@ class SensorListPage extends StatelessWidget {
               child: ListView.builder(
                 padding: EdgeInsets.all(16),
                 itemCount: provider.sensors.length,
-                itemBuilder: (context, index) => _buildSensorCard(provider.sensors[index]),
+                itemBuilder: (context, index) => _buildSensorCard(context, provider.sensors[index]),
               ),
             ),
           ],
@@ -42,7 +75,7 @@ class SensorListPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSensorCard(SensorData sensor) {
+  Widget _buildSensorCard(BuildContext context, SensorData sensor) {
     final threshold = GasThreshold.thresholds[sensor.gasType]!;
     Color statusColor = _getStatusColor(sensor.status);
 
@@ -100,6 +133,24 @@ class SensorListPage extends StatelessWidget {
               _buildThresholdChip('WASPADA', '${threshold.safeMax.toInt()}-${threshold.warningMax.toInt()}', Colors.orange),
               _buildThresholdChip('BAHAYA', '>${threshold.warningMax.toInt()}', Colors.red),
             ],
+          ),
+          SizedBox(height: 12),
+          // Tombol Lokasi
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () => _openGoogleMaps(context),
+              icon: Icon(Icons.location_on, size: 18),
+              label: Text('Lihat Lokasi Sensor'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Color(0xFF00BFA5),
+                padding: EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
           ),
         ],
       ),
