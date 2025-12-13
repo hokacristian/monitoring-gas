@@ -10,6 +10,8 @@ import 'pages/history_page.dart';
 import 'pages/profile_page.dart';
 import 'pages/sensor_list_page.dart';
 import 'pages/login_page.dart';
+import 'pages/information_page.dart';
+import 'widgets/app_drawer.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -80,12 +82,30 @@ class _MainPageState extends State<MainPage> {
     const ProfilePage(),
   ];
 
+  void _handleDrawerItemTap(int index) {
+    if (index == 5) {
+      // Navigate to Information Page
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => InformationPage()),
+      );
+    } else {
+      // Navigate to main pages (0-4)
+      setState(() => _currentIndex = index);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(0xFF00796B),
-        leading: IconButton(icon: Icon(Icons.menu, color: Colors.white), onPressed: () {}),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu, color: Colors.white),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
         title: Row(
           children: [
             Icon(Icons.local_fire_department, color: Colors.red, size: 20),
@@ -97,6 +117,10 @@ class _MainPageState extends State<MainPage> {
           IconButton(icon: Icon(Icons.settings, color: Colors.white), onPressed: () {}),
           IconButton(icon: Icon(Icons.notifications_outlined, color: Colors.white), onPressed: () {}),
         ],
+      ),
+      drawer: AppDrawer(
+        currentIndex: _currentIndex,
+        onItemTap: _handleDrawerItemTap,
       ),
       body: SafeArea(
         child: _pages[_currentIndex],
