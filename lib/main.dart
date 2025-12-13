@@ -114,7 +114,6 @@ class _MainPageState extends State<MainPage> {
           ],
         ),
         actions: [
-          IconButton(icon: Icon(Icons.settings, color: Colors.white), onPressed: () {}),
           IconButton(icon: Icon(Icons.notifications_outlined, color: Colors.white), onPressed: () {}),
         ],
       ),
