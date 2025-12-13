@@ -1,13 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'firebase_options.dart';
 import 'providers/gas_provider.dart';
 import 'pages/dashboard_page.dart';
 import 'pages/chart_page.dart';
 import 'pages/history_page.dart';
 import 'pages/profile_page.dart';
 import 'pages/sensor_list_page.dart';
+import 'pages/login_page.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => GasProvider(),
@@ -28,7 +37,27 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.teal,
         scaffoldBackgroundColor: Colors.black,
       ),
-      home: MainPage(),
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Scaffold(
+              backgroundColor: Colors.black,
+              body: Center(
+                child: CircularProgressIndicator(
+                  color: Color(0xFF00796B),
+                ),
+              ),
+            );
+          }
+
+          if (snapshot.hasData) {
+            return MainPage();
+          }
+
+          return LoginPage();
+        },
+      ),
     );
   }
 }

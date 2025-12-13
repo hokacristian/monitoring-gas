@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "817138382486",
+    "project_id": "monitoring-gas-424e5",
+    "storage_bucket": "monitoring-gas-424e5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:817138382486:android:44ab0a3f42ca403ab6f4b7",
+        "android_client_info": {
+          "package_name": "com.example.monitoring_gas"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBYNxYAe2_UQY9UqQpudD2mRhD9WCzb20Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
