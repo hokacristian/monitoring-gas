@@ -73,38 +73,135 @@ class ChartPage extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: 16),
       padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Color(0xFF00BFA5), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: Color(0xFF00BFA5),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: chartColor.withOpacity(0.3),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(sensor.gasName, style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-                  Text('${sensor.currentPpm.toStringAsFixed(1)} ppm', style: TextStyle(color: chartColor, fontSize: 18, fontWeight: FontWeight.bold)),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      sensor.gasName,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withOpacity(0.5),
+                            offset: Offset(1, 1),
+                            blurRadius: 2,
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      '${sensor.currentPpm.toStringAsFixed(1)} ppm',
+                      style: TextStyle(
+                        color: chartColor,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withOpacity(0.3),
+                            offset: Offset(1, 1),
+                            blurRadius: 2,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(color: chartColor, borderRadius: BorderRadius.circular(20)),
-                child: Text(_getStatusText(sensor.status), style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                decoration: BoxDecoration(
+                  color: chartColor,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white, width: 1.5),
+                ),
+                child: Text(
+                  _getStatusText(sensor.status),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
               ),
             ],
           ),
-          SizedBox(height: 8),
-          Text('Aman: <${threshold.safeMax.toInt()} | Waspada: ${threshold.safeMax.toInt()}-${threshold.warningMax.toInt()} | Bahaya: >${threshold.warningMax.toInt()}',
-            style: TextStyle(color: Colors.white70, fontSize: 10)),
+          SizedBox(height: 10),
+          Container(
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              'Aman: <${threshold.safeMax.toInt()} | Waspada: ${threshold.safeMax.toInt()}-${threshold.warningMax.toInt()} | Bahaya: >${threshold.warningMax.toInt()}',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                shadows: [
+                  Shadow(
+                    color: Colors.black.withOpacity(0.5),
+                    offset: Offset(1, 1),
+                    blurRadius: 2,
+                  ),
+                ],
+              ),
+            ),
+          ),
           SizedBox(height: 12),
           SizedBox(
             height: 120,
             child: LineChart(
               LineChartData(
-                gridData: FlGridData(show: true, drawVerticalLine: false, getDrawingHorizontalLine: (v) => FlLine(color: Colors.white24, strokeWidth: 1)),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  getDrawingHorizontalLine: (v) => FlLine(color: Colors.white24, strokeWidth: 1),
+                ),
                 titlesData: FlTitlesData(
-                  leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: true, reservedSize: 45, getTitlesWidget: (v, m) => Text(v.toInt().toString(), style: TextStyle(color: Colors.white70, fontSize: 9)))),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 45,
+                      getTitlesWidget: (v, m) => Text(
+                        v.toInt().toString(),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black.withOpacity(0.5),
+                              offset: Offset(1, 1),
+                              blurRadius: 2,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                   bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
                   topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -115,15 +212,25 @@ class ChartPage extends StatelessWidget {
                     spots: List.generate(sensor.history.length, (i) => FlSpot(i.toDouble(), sensor.history[i].ppm)),
                     isCurved: true,
                     color: chartColor,
-                    barWidth: 2,
+                    barWidth: 3,
                     dotData: FlDotData(show: false),
                     belowBarData: BarAreaData(show: true, color: chartColor.withValues(alpha: 0.3)),
                   ),
                 ],
                 extraLinesData: ExtraLinesData(
                   horizontalLines: [
-                    HorizontalLine(y: threshold.safeMax, color: Colors.green.withValues(alpha: 0.5), strokeWidth: 1, dashArray: [5, 5]),
-                    HorizontalLine(y: threshold.warningMax, color: Colors.red.withValues(alpha: 0.5), strokeWidth: 1, dashArray: [5, 5]),
+                    HorizontalLine(
+                      y: threshold.safeMax,
+                      color: Colors.green.withValues(alpha: 0.6),
+                      strokeWidth: 2,
+                      dashArray: [5, 5],
+                    ),
+                    HorizontalLine(
+                      y: threshold.warningMax,
+                      color: Colors.red.withValues(alpha: 0.6),
+                      strokeWidth: 2,
+                      dashArray: [5, 5],
+                    ),
                   ],
                 ),
               ),

@@ -4,12 +4,27 @@ import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import '../models/gas_data.dart';
 
+// Data untuk tracking siklus masing-masing sensor
+class SensorCycle {
+  double phase; // Current phase (0 to 2π)
+  double period; // Periode dalam detik (berapa lama 1 siklus penuh)
+  double phaseOffset; // Offset awal agar tidak sinkron
+
+  SensorCycle({
+    required this.phase,
+    required this.period,
+    required this.phaseOffset,
+  });
+}
+
 class GasProvider with ChangeNotifier {
   final AudioPlayer _audioPlayer = AudioPlayer();
   Timer? _timer;
   bool _isAlarmPlaying = false;
   GasStatus? _currentAlarmStatus;
-  int _cycleCounter = 0;
+
+  // Tracking siklus untuk setiap sensor
+  final Map<String, SensorCycle> _sensorCycles = {};
 
   // 5 Sensor untuk 5 jenis gas
   List<SensorData> sensors = [
@@ -58,8 +73,47 @@ class GasProvider with ChangeNotifier {
   List<HistoryEvent> historyEvents = [];
 
   GasProvider() {
+    _initializeSensorCycles();
     _initializeHistory();
     _startSimulation();
+  }
+
+  void _initializeSensorCycles() {
+    // Inisialisasi siklus untuk setiap sensor
+    // SEMUA periode SAMA (60 detik) agar bisa sync kembali ke AMAN bersamaan
+    // Tapi phase offset BERBEDA agar bergantian
+
+    const commonPeriod = 60.0; // 1 menit - SAMA untuk semua
+
+    // Phase offset: 0, 1/5, 2/5, 3/5, 4/5 dari siklus (2π)
+    // Ini membuat sensor bergantian setiap 12 detik
+    // Setelah 60 detik, semua kembali ke AMAN bersamaan
+
+    _sensorCycles['1'] = SensorCycle(
+      phase: 0,                    // Start: AMAN
+      period: commonPeriod,
+      phaseOffset: 0,
+    );
+    _sensorCycles['2'] = SensorCycle(
+      phase: 2 * pi * 0.2,         // Start: offset 12 detik (20%)
+      period: commonPeriod,
+      phaseOffset: 2 * pi * 0.2,
+    );
+    _sensorCycles['3'] = SensorCycle(
+      phase: 2 * pi * 0.4,         // Start: offset 24 detik (40%)
+      period: commonPeriod,
+      phaseOffset: 2 * pi * 0.4,
+    );
+    _sensorCycles['4'] = SensorCycle(
+      phase: 2 * pi * 0.6,         // Start: offset 36 detik (60%)
+      period: commonPeriod,
+      phaseOffset: 2 * pi * 0.6,
+    );
+    _sensorCycles['5'] = SensorCycle(
+      phase: 2 * pi * 0.8,         // Start: offset 48 detik (80%)
+      period: commonPeriod,
+      phaseOffset: 2 * pi * 0.8,
+    );
   }
 
   void _initializeHistory() {
@@ -75,26 +129,60 @@ class GasProvider with ChangeNotifier {
   }
 
   void _startSimulation() {
-    _timer = Timer.periodic(Duration(seconds: 2), (timer) {
-      _cycleCounter++;
-      final random = Random();
+    const updateInterval = 2; // Update setiap 2 detik
+    final random = Random();
 
+    _timer = Timer.periodic(Duration(seconds: updateInterval), (timer) {
       for (var sensor in sensors) {
+        final cycle = _sensorCycles[sensor.id]!;
         final threshold = GasThreshold.thresholds[sensor.gasType]!;
+
+        // Update phase berdasarkan periode
+        // phase bertambah dari 0 ke 2π dalam waktu period detik
+        cycle.phase += (2 * pi * updateInterval) / cycle.period;
+        if (cycle.phase >= 2 * pi) {
+          cycle.phase -= 2 * pi; // Reset ke 0 setelah 1 siklus penuh
+        }
+
+        // Gunakan sine wave untuk transisi smooth
+        // sin(phase) menghasilkan nilai -1 to 1
+        // Kita mapping:
+        // -1 to -0.5 => AMAN
+        // -0.5 to 0.5 => WASPADA (naik)
+        // 0.5 to 1 => BAHAYA
+        // 1 to 0.5 => BAHAYA (turun)
+        // 0.5 to -0.5 => WASPADA (turun)
+        // -0.5 to -1 => AMAN
+
+        double sineValue = sin(cycle.phase);
         double targetPpm;
 
-        // Simulasi: 15 detik aman, 10 detik waspada, 5 detik bahaya
-        if (_cycleCounter <= 15) {
-          targetPpm = threshold.safeMax * 0.6 + random.nextDouble() * threshold.safeMax * 0.3;
-        } else if (_cycleCounter <= 25) {
-          targetPpm = threshold.safeMax + (threshold.warningMax - threshold.safeMax) * 0.5;
-          targetPpm += random.nextDouble() * (threshold.warningMax - threshold.safeMax) * 0.3;
-        } else if (_cycleCounter <= 30) {
-          targetPpm = threshold.warningMax + random.nextDouble() * threshold.warningMax * 0.2;
+        if (sineValue < -0.3) {
+          // Kondisi AMAN
+          // Map dari -1 to -0.3 => 0% to 80% dari safeMax
+          double t = (sineValue + 1) / 0.7; // normalize to 0-1
+          targetPpm = threshold.safeMax * (0.2 + t * 0.6);
+          // Tambahkan sedikit variasi random
+          targetPpm += (random.nextDouble() - 0.5) * threshold.safeMax * 0.1;
+        } else if (sineValue < 0.5) {
+          // Transisi AMAN ke WASPADA atau WASPADA ke AMAN
+          // Map dari -0.3 to 0.5 => safeMax to warningMax
+          double t = (sineValue + 0.3) / 0.8; // normalize to 0-1
+          targetPpm = threshold.safeMax + t * (threshold.warningMax - threshold.safeMax);
+          // Tambahkan sedikit variasi random
+          targetPpm += (random.nextDouble() - 0.5) * (threshold.warningMax - threshold.safeMax) * 0.1;
         } else {
-          _cycleCounter = 0;
-          targetPpm = threshold.safeMax * 0.5;
+          // Kondisi BAHAYA atau transisi WASPADA ke BAHAYA
+          // Map dari 0.5 to 1 => warningMax to dangerLevel
+          double t = (sineValue - 0.5) / 0.5; // normalize to 0-1
+          double dangerLevel = threshold.warningMax * 1.5;
+          targetPpm = threshold.warningMax + t * (dangerLevel - threshold.warningMax);
+          // Tambahkan sedikit variasi random
+          targetPpm += (random.nextDouble() - 0.5) * (dangerLevel - threshold.warningMax) * 0.1;
         }
+
+        // Pastikan tidak melebihi batas maksimal
+        targetPpm = targetPpm.clamp(0, threshold.warningMax * 2);
 
         sensor.currentPpm = targetPpm;
         sensor.history.add(GasData(sensor.currentPpm, DateTime.now()));

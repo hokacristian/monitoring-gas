@@ -99,8 +99,18 @@ class DashboardPage extends StatelessWidget {
             var sensor = sensors[index];
             Color statusColor = _getStatusColor(sensor.status);
             return Container(
-              padding: EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Color(0xFF00BFA5), borderRadius: BorderRadius.circular(12)),
+              padding: EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: Color(0xFF00BFA5),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: statusColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -108,16 +118,72 @@ class DashboardPage extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(sensor.shortName, style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                      Expanded(
+                        child: Text(
+                          sensor.shortName,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withOpacity(0.5),
+                                offset: Offset(1, 1),
+                                blurRadius: 2,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(color: statusColor, borderRadius: BorderRadius.circular(12)),
-                        child: Text(_getStatusText(sensor.status), style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: statusColor,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.white, width: 1.5),
+                        ),
+                        child: Text(
+                          _getStatusText(sensor.status),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                  Text('${sensor.currentPpm.toStringAsFixed(1)} ppm', style: TextStyle(color: statusColor, fontSize: 22, fontWeight: FontWeight.bold)),
-                  Text(sensor.gasName.split('(')[1].replaceAll(')', ''), style: TextStyle(color: Colors.white70, fontSize: 10)),
+                  Text(
+                    '${sensor.currentPpm.toStringAsFixed(1)} ppm',
+                    style: TextStyle(
+                      color: statusColor,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withOpacity(0.3),
+                          offset: Offset(1, 1),
+                          blurRadius: 2,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    sensor.gasName.split('(')[1].replaceAll(')', ''),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      shadows: [
+                        Shadow(
+                          color: Colors.black.withOpacity(0.5),
+                          offset: Offset(1, 1),
+                          blurRadius: 2,
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             );

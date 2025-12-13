@@ -49,22 +49,83 @@ class HistoryPage extends StatelessWidget {
     return Container(
       margin: EdgeInsets.only(bottom: 12),
       padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Color(0xFF00BFA5), borderRadius: BorderRadius.circular(12)),
+      decoration: BoxDecoration(
+        color: Color(0xFF00BFA5),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: _getStatusColor(event.status).withOpacity(0.3),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
       child: Row(
         children: [
           Container(
             padding: EdgeInsets.all(12),
-            decoration: BoxDecoration(color: _getStatusColor(event.status).withValues(alpha: 0.2), shape: BoxShape.circle),
-            child: Icon(_getStatusIcon(event.status), color: _getStatusColor(event.status), size: 24),
+            decoration: BoxDecoration(
+              color: _getStatusColor(event.status).withValues(alpha: 0.2),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: _getStatusColor(event.status),
+                width: 2,
+              ),
+            ),
+            child: Icon(_getStatusIcon(event.status), color: _getStatusColor(event.status), size: 28),
           ),
-          SizedBox(width: 12),
+          SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('${event.gasName} - ${_getStatusText(event.status)}', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-                Text('${event.ppm.toStringAsFixed(1)} PPM', style: TextStyle(color: _getStatusColor(event.status), fontSize: 12, fontWeight: FontWeight.bold)),
-                Text(DateFormat('d MMM yyyy, HH:mm').format(event.timestamp), style: TextStyle(color: Colors.white70, fontSize: 12)),
+                Text(
+                  '${event.gasName} - ${_getStatusText(event.status)}',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withOpacity(0.5),
+                        offset: Offset(1, 1),
+                        blurRadius: 2,
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  '${event.ppm.toStringAsFixed(1)} PPM',
+                  style: TextStyle(
+                    color: _getStatusColor(event.status),
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withOpacity(0.3),
+                        offset: Offset(1, 1),
+                        blurRadius: 2,
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: 2),
+                Text(
+                  DateFormat('d MMM yyyy, HH:mm').format(event.timestamp),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withOpacity(0.5),
+                        offset: Offset(1, 1),
+                        blurRadius: 2,
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
